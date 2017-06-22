@@ -1,15 +1,19 @@
 package com.example.digitalsignature;
 
+import android.Manifest;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.AttributeSet;
@@ -22,9 +26,16 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.github.barteksc.pdfviewer.PDFView;
+import com.github.barteksc.pdfviewer.util.FileUtils;
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
+
 import java.io.File;
 import java.io.FileOutputStream;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
@@ -32,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
 
     Toolbar toolbar;
     Button btn_get_sign, mClear, mGetSign, mCancel;
+    FloatingActionButton fab;
+    PDFView pdfView;
 
     File file;
     Dialog dialog;
@@ -54,8 +67,42 @@ public class MainActivity extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Button to open signature panel
-        btn_get_sign = (Button) findViewById(R.id.signature);
+        pdfView = (PDFView) findViewById(R.id.pdfView);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+
+        Intent intent = this.getIntent();
+        String path = intent.getStringExtra("filePath");
+        Uri myUri = Uri.parse(path);
+
+        pdfView.fromUri(myUri)
+                .enableSwipe(true) // allows to block changing pages using swipe
+                .swipeHorizontal(false)
+                .enableDoubletap(true)
+                .defaultPage(0)
+                .enableAnnotationRendering(false) // render annotations (such as comments, colors or forms)
+                .password(null)
+                .scrollHandle(null)
+                .enableAntialiasing(true) // improve rendering a little bit on low-res screens
+                .load();
+
+
+        PermissionListener permissionlistener = new PermissionListener() {
+            @Override
+            public void onPermissionGranted() {
+                //Toast.makeText(MainActivity.this, "Permission Granted", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onPermissionDenied(ArrayList<String> deniedPermissions) {
+                Toast.makeText(MainActivity.this, "Permission Denied\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        new TedPermission(this)
+                .setPermissionListener(permissionlistener)
+                .setDeniedMessage("If you reject permission,you can not use this service\n\nPlease turn on permissions at [Setting] > [Permission]")
+                .setPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .check();
 
         // Method to create Directory, if the Directory doesn't exists
         file = new File(DIRECTORY);
@@ -70,15 +117,12 @@ public class MainActivity extends AppCompatActivity {
         dialog.setContentView(R.layout.dialog_signature);
         dialog.setCancelable(true);
 
-        btn_get_sign.setOnClickListener(new View.OnClickListener() {
+        fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Function call for Digital Signature
                 dialog_action();
-
             }
         });
-
     }
 
     // Function for Digital Signature

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Digital Signature</string>
+    <string name="app_name">Signature</string>
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
@@ -8,4 +8,6 @@
     <string name="hint_cancel">Cancel</string>
     <string name="hint_clear">Clear</string>
     <string name="hint_save">Save</string>
+    <string name="title_activity_pdf">PDF</string>
+    <string name="hint_choose">Choose File</string>
 </resources>
